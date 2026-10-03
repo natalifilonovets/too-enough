@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Too • Too Much • Too Many • Enough</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --ink:#302a43;
+  --muted:#7f788f;
+  --pink:#ff7f9f;
+  --peach:#ffb66f;
+  --lav:#9b8cff;
+  --mint:#75d8b4;
+  --good:#269b6b;
+  --bad:#d95770;
+  --line:#eee8f3;
+}
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+  font-family:Inter,ui-rounded,"Segoe UI",Arial,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 10% 10%,#ffe2ea 0 10%,transparent 11%),
+    radial-gradient(circle at 90% 15%,#e8e1ff 0 11%,transparent 12%),
+    linear-gradient(135deg,#fff9f5,#f8f5ff);
+}
+.app{
+  width:min(760px,100%);
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  margin-bottom:14px;
+}
+.brand{
+  font-weight:950;
+  font-size:18px;
+}
+.counter{
+  color:var(--muted);
+  font-weight:800;
+  font-size:14px;
+}
+.progress{
+  height:10px;
+  border-radius:999px;
+  background:#eee9f2;
+  overflow:hidden;
+  margin-bottom:18px;
+}
+.bar{
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,var(--pink),var(--lav));
+  transition:.3s ease;
+}
+.card{
+  background:rgba(255,255,255,.94);
+  border:1px solid var(--line);
+  border-radius:30px;
+  padding:34px;
+  box-shadow:0 20px 55px rgba(64,50,95,.12);
+}
+.tag{
+  display:inline-block;
+  padding:7px 11px;
+  border-radius:999px;
+  background:#f5f1ff;
+  color:#6657c6;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:18px;
+}
+.question{
+  font-size:clamp(25px,4vw,38px);
+  font-weight:950;
+  line-height:1.2;
+  margin:0 0 28px;
+}
+.options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+button.option{
+  border:2px solid var(--line);
+  border-radius:17px;
+  padding:16px 12px;
+  background:#fff;
+  color:#5c5570;
+  font:inherit;
+  font-weight:900;
+  cursor:pointer;
+  transition:.18s ease;
+}
+button.option:hover:not(:disabled){
+  transform:translateY(-2px);
+  border-color:#cfc4ff;
+  background:#faf8ff;
+}
+button.option:disabled{cursor:default}
+button.option.correct{
+  border-color:#8fdec1;
+  background:#eaf9f2;
+  color:#267958;
+}
+button.option.wrong{
+  border-color:#ffbdca;
+  background:#fff0f3;
+  color:#b63f58;
+}
+.feedback{
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  margin-top:18px;
+  border-radius:17px;
+  padding:15px 17px;
+  font-weight:800;
+  line-height:1.4;
+  opacity:0;
+  transform:translateY(5px);
+  transition:.2s ease;
+}
+.feedback.show{
+  opacity:1;
+  transform:translateY(0);
+}
+.feedback.good{
+  background:#eaf9f2;
+  color:#237a56;
+}
+.feedback.bad{
+  background:#fff0f3;
+  color:#b63f58;
+}
+.footer{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:18px;
+}
+.next{
+  display:none;
+  border:0;
+  border-radius:16px;
+  padding:14px 24px;
+  background:linear-gradient(135deg,var(--pink),var(--lav));
+  color:white;
+  font:inherit;
+  font-weight:950;
+  cursor:pointer;
+  box-shadow:0 10px 24px rgba(156,140,255,.26);
+}
+.next.show{display:block}
+.end{
+  text-align:center;
+}
+.score{
+  font-size:54px;
+  font-weight:1000;
+  margin:10px 0 4px;
+}
+.sub{
+  color:var(--muted);
+  font-weight:700;
+  margin-bottom:24px;
+}
+.restart{
+  border:0;
+  border-radius:16px;
+  padding:14px 22px;
+  background:linear-gradient(135deg,var(--pink),var(--lav));
+  color:white;
+  font:inherit;
+  font-weight:950;
+  cursor:pointer;
+}
+@media(max-width:600px){
+  body{padding:18px}
+  .card{padding:24px}
+  .options{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand">Too • Too Much • Too Many • Enough</div>
+    <div class="counter" id="counter">1 / 16</div>
+  </div>
+
+  <div class="progress"><div class="bar" id="bar"></div></div>
+
+  <main class="card" id="card">
+    <div class="tag">Choose the best answer</div>
+    <h1 class="question" id="question"></h1>
+
+    <div class="options" id="options"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="footer">
+      <button class="next" id="nextBtn">Next →</button>
+    </div>
+  </main>
+</div>
+
+<script>
+const questions = [
+  {q:"This bag is ___ heavy for me.", a:"too", tip:"We use too before an adjective: too heavy."},
+  {q:"There is ___ sugar in my tea.", a:"too much", tip:"Sugar is uncountable, so we use too much."},
+  {q:"We have ___ chairs for everyone.", a:"enough", tip:"Enough means the right amount: enough chairs."},
+  {q:"There are ___ people in this small room.", a:"too many", tip:"People is a plural countable noun, so we use too many."},
+  {q:"The coffee is ___ hot. I can't drink it.", a:"too", tip:"Hot is an adjective, so we use too hot."},
+  {q:"She spends ___ money on clothes.", a:"too much", tip:"Money is uncountable, so we use too much."},
+  {q:"Do we have ___ food for the picnic?", a:"enough", tip:"Enough food means the amount is sufficient."},
+  {q:"He has ___ books in his backpack.", a:"too many", tip:"Books are plural and countable, so we use too many."},
+  {q:"The music is ___ loud.", a:"too", tip:"Loud is an adjective: too loud."},
+  {q:"I don't have ___ time to finish this today.", a:"enough", tip:"Enough time means sufficient time."},
+  {q:"You put ___ salt in the soup.", a:"too much", tip:"Salt is uncountable, so we use too much."},
+  {q:"There are ___ cars on this road today.", a:"too many", tip:"Cars are plural and countable, so we use too many."},
+  {q:"Is the room warm ___?", a:"enough", tip:"With adjectives, enough usually comes after the adjective: warm enough."},
+  {q:"These shoes are ___ small for me.", a:"too", tip:"Small is an adjective, so we use too small."},
+  {q:"She asks ___ questions in class.", a:"too many", tip:"Questions are plural and countable, so we use too many."},
+  {q:"We drank ___ coffee and couldn't sleep.", a:"too much", tip:"Coffee is uncountable, so we use too much."}
+];
+
+const baseChoices = ["too","too much","too many","enough"];
+
+let index = 0;
+let score = 0;
+let answered = false;
+
+const qEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const feedbackEl = document.getElementById("feedback");
+const nextBtn = document.getElementById("nextBtn");
+const counterEl = document.getElementById("counter");
+const barEl = document.getElementById("bar");
+const cardEl = document.getElementById("card");
+
+function shuffle(arr){
+  return [...arr].sort(()=>Math.random()-0.5);
+}
+
+function renderQuestion(){
+  answered = false;
+  const item = questions[index];
+  qEl.textContent = item.q;
+  optionsEl.innerHTML = "";
+  feedbackEl.className = "feedback";
+  feedbackEl.textContent = "";
+  nextBtn.classList.remove("show");
+
+  counterEl.textContent = `${index+1} / ${questions.length}`;
+  barEl.style.width = `${(index/questions.length)*100}%`;
+
+  shuffle(baseChoices).forEach(choice=>{
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "option";
+    btn.textContent = choice;
+    btn.addEventListener("click",()=>selectAnswer(btn,choice));
+    optionsEl.appendChild(btn);
+  });
+}
+
+function selectAnswer(button,choice){
+  if(answered) return;
+  answered = true;
+
+  const item = questions[index];
+  const buttons = [...document.querySelectorAll(".option")];
+  buttons.forEach(b=>b.disabled=true);
+
+  if(choice === item.a){
+    score++;
+    button.classList.add("correct");
+    feedbackEl.textContent = "✓ Correct! " + item.tip;
+    feedbackEl.className = "feedback good show";
+  }else{
+    button.classList.add("wrong");
+    const correctBtn = buttons.find(b=>b.textContent===item.a);
+    if(correctBtn) correctBtn.classList.add("correct");
+    feedbackEl.textContent = "✦ Not quite. " + item.tip;
+    feedbackEl.className = "feedback bad show";
+  }
+
+  nextBtn.textContent = index === questions.length-1 ? "See result →" : "Next →";
+  nextBtn.classList.add("show");
+  barEl.style.width = `${((index+1)/questions.length)*100}%`;
+}
+
+nextBtn.addEventListener("click",()=>{
+  if(index < questions.length-1){
+    index++;
+    renderQuestion();
+  }else{
+    showResult();
+  }
+});
+
+function showResult(){
+  const pct = Math.round(score/questions.length*100);
+  counterEl.textContent = "Finished";
+  barEl.style.width = "100%";
+
+  let msg = pct === 100 ? "Perfect — no mistakes!"
+          : pct >= 80 ? "Great job!"
+          : pct >= 60 ? "Good work — one more round will make it easier."
+          : "Try again and use the feedback after each answer.";
+
+  cardEl.innerHTML = `
+    <div class="end">
+      <div class="tag">Your result</div>
+      <div class="score">${score} / ${questions.length}</div>
+      <div class="sub">${pct}% — ${msg}</div>
+      <button class="restart" onclick="restartQuiz()">Try again</button>
+    </div>`;
+}
+
+function restartQuiz(){
+  location.reload();
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
